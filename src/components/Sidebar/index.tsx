@@ -2,6 +2,8 @@
 import { css } from "@emotion/react";
 import { useChat } from "@/store/chat";
 import { useModal } from "@/hooks/useModal";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { CSSProperties, useEffect, useState } from "react";
 
 //Components
 import {
@@ -9,12 +11,11 @@ import {
     Button,
     Divider,
     Heading,
-    Icon,
     IconButton,
     Spacer,
     Stack,
     Text,
-    useColorMode
+    useColorMode,
 } from "@chakra-ui/react";
 import {
     FiCheckCircle,
@@ -29,7 +30,6 @@ import {
     FiUser,
     FiX
 } from "react-icons/fi";
-import { CSSProperties, useEffect, useState } from "react";
 
 export interface SideBarProps {
     isResponsive?: boolean
@@ -40,8 +40,17 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
         handleOpen = () => setIsOpen(true),
         handleClose = () => setIsOpen(false);
 
+    const [listRef] = useAutoAnimate();
+
     const { toggleColorMode, colorMode } = useColorMode();
-    const { chat, selectedChat, setSelectedChat, removeChat, clearAll } = useChat();
+    const {
+        chat,
+        selectedChat,
+        addChat,
+        setSelectedChat,
+        removeChat,
+        clearAll
+    } = useChat();
 
     const {
         Modal: AccountModal,
@@ -50,7 +59,7 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
 
     useEffect(() => {
         if (!isResponsive) handleClose();
-    }, [isResponsive])
+    }, [isResponsive]);
 
     const responsiveProps = isResponsive ? {
         position: "fixed" as CSSProperties['position'],
@@ -120,6 +129,7 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                     justifyContent="flex-start"
                     transition={["all", "ease", ".5s"]}
                     backgroundColor="transparent"
+                    onClick={addChat}
                     _hover={{
                         backgroundColor: "whiteAlpha.100"
                     }}
@@ -127,6 +137,7 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                 <Stack
                     height="full"
                     overflowY="auto"
+                    ref={listRef}
                 >
                     {chat?.map(({ id, role }) => {
                         return (
@@ -145,20 +156,20 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                                     backgroundColor: "whiteAlpha.100"
                                 }}
                                 css={css`
-                                .erase_icon{
-                                    display:none;
+                            .icon{
+                                display:none;
+                            }
+                            &:hover{
+                                .icon{
+                                    display:block;
                                 }
-                                &:hover{
-                                    .erase_icon{
-                                        display:block;
-                                    }
-                                }
-                            `}
+                            }
+                        `}
                             >
                                 <Text>{role}</Text>
                                 <Spacer />
                                 <FiTrash2
-                                    className="erase_icon"
+                                    className="icon"
                                     onClick={() => removeChat({ id })}
                                 />
                             </Button>
