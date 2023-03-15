@@ -7,9 +7,12 @@ import Home from '@/pages/Home';
 
 //Style
 import '@/styles/global.css';
+import { Providers } from './components/Providers';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <Home />
+    <Providers>
+      <Home />
+    </Providers>
   </React.StrictMode>,
 )
