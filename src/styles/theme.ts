@@ -1,10 +1,18 @@
-import { ThemeConfig, extendBaseTheme } from "@chakra-ui/react";
-
+import { ThemeConfig, extendTheme, defineStyleConfig } from "@chakra-ui/react";
 const config: ThemeConfig = {
     initialColorMode: 'dark',
     useSystemColorMode: false
 };
 
-export const theme = extendBaseTheme({
+const Button = defineStyleConfig({
+    baseStyle: {
+        cursor: "pointer"
+    }
+});
+
+export const theme = extendTheme({
     config,
+    components: {
+        Button,
+    }
 });
