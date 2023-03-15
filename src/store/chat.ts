@@ -2,7 +2,9 @@ import { create } from "zustand";
 
 export interface UseChatProps {
     chat: Chat[],
+    selectedChat: Chat | undefined,
     setChat: (payload: Chat) => void,
+    setSelectedChat: (payload: { id: string }) => void,
     removeChat: (pyload: { id: string }) => void,
     clearAll: () => void,
 };
@@ -53,7 +55,12 @@ const initialChatState: Chat[] = [
 
 export const useChat = create<UseChatProps>((set) => ({
     chat: initialChatState,
+    selectedChat: initialChatState[0],
     setChat: async (payload) => set(({ chat }) => ({ chat: [...chat, payload] })),
+    setSelectedChat: async (payload) => set(({ chat }) => {
+        const selectedChat = chat.find(({ id }) => id === payload.id);
+        return ({ selectedChat: selectedChat })
+    }),
     removeChat: async (payload) => set(({ chat }) => {
         console.log(payload);
 
