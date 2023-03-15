@@ -62,10 +62,8 @@ export const useChat = create<UseChatProps>((set) => ({
         return ({ selectedChat: selectedChat })
     }),
     removeChat: async (payload) => set(({ chat }) => {
-        console.log(payload);
-
         const newChat = chat.filter(({ id }) => id !== payload.id);
         return ({ chat: newChat });
     }),
-    clearAll: async () => set({ chat: [] })
+    clearAll: async () => set({ chat: [], selectedChat: undefined })
 }));
