@@ -1,20 +1,43 @@
 //Modules
-import { useChat } from "@/store/chat";
 import gptAvatar from "@/assets/gpt-avatar.svg"
+import { useChat } from "@/store/chat";
+import { useForm } from "react-hook-form";
+import { useAutoAnimate } from "@formkit/auto-animate/react"
 
 //Components
 import { Input } from "@/components/Input";
+import { IconType } from "react-icons";
 import { FiAlertTriangle, FiSend, FiSun, FiZap } from "react-icons/fi";
-import { Avatar, Button, Divider, Heading, Icon, IconButton, Spacer, Stack, Text } from "@chakra-ui/react";
+import {
+    Avatar,
+    Button,
+    Heading,
+    Icon,
+    IconButton,
+    Spacer,
+    Stack,
+    Text
+} from "@chakra-ui/react";
 
-export interface ChatProps {
+export interface ChatProps { };
 
+interface ChatSchema {
+    input: string
+};
+
+type Introdution = {
+    icon: IconType,
+    name: "Examples" | "Capabilities" | "Limitations",
+    list: string[]
 };
 
 export const Chat = ({ ...props }: ChatProps) => {
-    const { selectedChat } = useChat();
+    const { selectedChat, setSelectedChat } = useChat();
+    const { register, setValue } = useForm<ChatSchema>();
 
-    const introdution = [
+    const [parentRef] = useAutoAnimate();
+
+    const introdution: Introdution[] = [
         {
             icon: FiSun,
             name: "Examples",
@@ -58,9 +81,11 @@ export const Chat = ({ ...props }: ChatProps) => {
                 <Stack
                     spacing={2}
                     height="full"
+                    padding={2}
+                    ref={parentRef}
                 >
-                    {(selectedChat) ? (
-                        selectedChat?.content?.map(({ emitter, message }, key) => {
+                    {(selectedChat && selectedChat?.content.length > 0) ? (
+                        selectedChat.content.map(({ emitter, message }, key) => {
                             return (
                                 <Stack
                                     key={key}
@@ -95,30 +120,40 @@ export const Chat = ({ ...props }: ChatProps) => {
                             <Stack
                                 direction="row"
                             >
-                                {introdution.map(({ icon, list, name }, key) => (
-                                    <Stack
-                                        key={key}
-                                        alignItems="center"
-                                    >
-                                        <Icon
-                                            as={icon}
-                                        />
-                                        <Heading size="sm">{name}</Heading>
-                                        {list.map((text, key) => (
-                                            <Button
-                                                key={key}
-                                                maxWidth={64}
-                                                height="fit-content"
-                                                padding={4}
-                                            >
-                                                <Text
-                                                    overflow="hidden"
-                                                    whiteSpace="normal"
-                                                >{text}</Text>
-                                            </Button>
-                                        ))}
-                                    </Stack>
-                                ))}
+                                {introdution.map(({ icon, list, name }, key) => {
+                                    const handleClick = (text: string) => {
+                                        if (name == 'Examples') {
+                                            return () => setValue('input', text);
+                                        };
+                                        return undefined;
+                                    };
+
+                                    return (
+                                        <Stack
+                                            key={key}
+                                            alignItems="center"
+                                        >
+                                            <Icon
+                                                as={icon}
+                                            />
+                                            <Heading size="sm">{name}</Heading>
+                                            {list.map((text, key) => (
+                                                <Button
+                                                    key={key}
+                                                    maxWidth={64}
+                                                    height="fit-content"
+                                                    padding={4}
+                                                    onClick={handleClick(text)}
+                                                >
+                                                    <Text
+                                                        overflow="hidden"
+                                                        whiteSpace="normal"
+                                                    >{text}</Text>
+                                                </Button>
+                                            ))}
+                                        </Stack>
+                                    )
+                                })}
                             </Stack>
                         </Stack>
                     )}
@@ -130,6 +165,7 @@ export const Chat = ({ ...props }: ChatProps) => {
                 padding={4}
             >
                 <Input
+                    autoFocus={true}
                     variant="filled"
                     inputRightAddon={(
                         <IconButton
@@ -138,7 +174,7 @@ export const Chat = ({ ...props }: ChatProps) => {
                             backgroundColor="transparent"
                         />
                     )}
-                    autoFocus={true}
+                    {...register('input')}
                 />
                 <Text
                     textAlign="center"
