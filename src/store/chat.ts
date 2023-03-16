@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import { v4 } from 'uuid';
+import store from "store2";
 
 export interface UseChatProps {
     chat: Chat[],
     selectedChat: Chat | undefined,
     setChat: (payload: Chat) => void,
-    addChat: () => void,
+    addChat: (callback?: (id: string) => void) => void,
     editChat: (id: string, payload: Partial<Chat>) => void,
+    addMessage: (id: string, action: ChatContent) => void,
     setSelectedChat: (payload: { id: string }) => void,
     removeChat: (pyload: { id: string }) => void,
     clearAll: () => void,
@@ -23,34 +25,43 @@ type ChatContent = {
     message: string
 };
 
-type ChatContentEmmiter = "gpt" | "user";
+type ChatContentEmmiter = "gpt" | "user" | "error";
 
-const initialChatState: Chat[] = [
+const savedChats = JSON.parse(store.session("@chat"));
+const getSafeSavedChats = () => {
+    if (Array.isArray(savedChats) && savedChats.length > 0) {
+        return savedChats;
+    };
+
+    return undefined;
+};
+
+const initialChatState: Chat[] = getSafeSavedChats() || [
     {
         id: '1',
-        role: 'JavaScript',
+        role: 'About this website',
         content: [
             {
                 emitter: "user",
-                message: "What's JavaScript?"
+                message: "What website is this?"
             },
             {
                 emitter: "gpt",
-                message: "JavaScript is a programming language."
+                message: "This website is a clone of the ChatGPT website interface created by @WesleyMaik.\n\nYou can also send commands to the original site, with the help of the official ChatGPT API."
             }
         ],
     },
     {
         id: '2',
-        role: 'Python',
+        role: 'Follow me 😉',
         content: [
             {
                 emitter: "user",
-                message: "Which the most used programming language in 2022?"
+                message: "Follow me on \nTwitter [@euwesleymaik](https://twitter.com/euwesleymaik)\nInstagram [eumaik_](https://instagram.com/eumaik_)\nGitHub [WesleyMaik](https://github.com/wesleymaik)"
             },
             {
                 emitter: "gpt",
-                message: "It's Python."
+                message: "Thanks!"
             }
         ],
     }
@@ -60,7 +71,7 @@ export const useChat = create<UseChatProps>((set, get) => ({
     chat: initialChatState,
     selectedChat: initialChatState[0],
     setChat: async (payload) => set(({ chat }) => ({ chat: [...chat, payload] })),
-    addChat: async () => {
+    addChat: async (callback) => {
         const hasNewChat = get().chat.find(({ content }) => (content.length === 0));
 
         if (!hasNewChat) {
@@ -71,17 +82,32 @@ export const useChat = create<UseChatProps>((set, get) => ({
                 content: []
             });
             get().setSelectedChat({ id });
+            if (callback) callback(id);
         } else {
             const { id } = hasNewChat;
             get().setSelectedChat({ id });
+            if (callback) callback(id);
         };
     },
     editChat: async (id, payload) => set(({ chat }) => {
-        const newChatIndex = chat.findIndex((query) => (query.id === id));
-        if (newChatIndex > -1) {
-            chat[newChatIndex] = { ...chat[newChatIndex], ...payload };
+        const selectedChat = chat.findIndex((query) => (query.id === id));
+        if (selectedChat > -1) {
+            chat[selectedChat] = { ...chat[selectedChat], ...payload };
+            return ({ chat, selectedChat: chat[selectedChat] })
         };
-        return ({ chat, selectedChat: chat[newChatIndex] })
+        return ({});
+
+    }),
+    addMessage: async (id, action) => set(({ chat }) => {
+        const selectedChat = chat.findIndex((query) => (query.id === id)),
+            props = chat[selectedChat];
+
+        if (selectedChat > -1) {
+            chat[selectedChat] = { ...props, content: [...props['content'], action] }
+            return ({ chat, selectedChat: chat[selectedChat] });
+        };
+
+        return ({});
     }),
     setSelectedChat: async (payload) => set(({ chat }) => {
         const selectedChat = chat.find(({ id }) => id === payload.id);
