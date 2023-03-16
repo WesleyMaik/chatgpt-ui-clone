@@ -1,9 +1,10 @@
 //Modules
-import { css } from "@emotion/react";
 import { useChat } from "@/store/chat";
 import { useModal } from "@/hooks/useModal";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { CSSProperties, useEffect, useState } from "react";
+import store from "store2";
+import { motion } from "framer-motion";
 
 //Components
 import {
@@ -20,6 +21,7 @@ import {
 import {
     FiCheckCircle,
     FiExternalLink,
+    FiKey,
     FiLogOut,
     FiMenu,
     FiMessageSquare,
@@ -30,6 +32,9 @@ import {
     FiUser,
     FiX
 } from "react-icons/fi";
+import {
+    APIKeyModal as APIKeyModalContent
+} from "../Layout/APIKeyModal";
 
 export interface SideBarProps {
     isResponsive?: boolean
@@ -56,14 +61,23 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
         Modal: AccountModal,
         handleOpen: handleOpenAccountModal
     } = useModal();
+    const {
+        Modal: APIKeyModal,
+        handleOpen: handleOpenAPIKeyModal,
+        handleClose: handleCloseAPIKeyModal
+    } = useModal();
 
     useEffect(() => {
         if (!isResponsive) handleClose();
     }, [isResponsive]);
 
+    useEffect(() => {
+        store.session("@chat", JSON.stringify(chat));
+    }, [chat, selectedChat])
+
     const responsiveProps = isResponsive ? {
         position: "fixed" as CSSProperties['position'],
-        left: isOpen ? 0 : '100%',
+        left: isOpen ? 0 : '-100%',
         top: 0
     } : {};
 
@@ -72,6 +86,7 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
             {!!(isResponsive) && (
                 <Stack
                     direction="row"
+                    justifyContent="space-between"
                     alignItems="center"
                     padding={2}
                 >
@@ -80,20 +95,32 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                         icon={<FiMenu />}
                         onClick={handleOpen}
                     />
-                    <Spacer />
                     <Heading
                         size="md"
                     >{selectedChat?.role}</Heading>
+                    <IconButton
+                        aria-label="add"
+                        icon={<FiPlus />}
+                        onClick={() => addChat()}
+                    />
                 </Stack>
             )}
             {!!(isOpen) && (
                 <Stack
+                    as={motion.div}
                     width="full"
                     height="full"
                     position="absolute"
                     top={0}
                     left={0}
                     backgroundColor="whiteAlpha.700"
+                    transition="all ease .5s"
+                    initial={{
+                        opacity: 0
+                    }}
+                    animate={{
+                        opacity: 1
+                    }}
                 />
             )}
             <Stack
@@ -104,7 +131,7 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                 color="white"
                 backgroundColor="gray.900"
                 zIndex={1}
-                transition={['all', 'ease', '.5s']}
+                transition="all ease .5s"
                 {...responsiveProps}
             >
                 {!!(isResponsive) && (
@@ -127,9 +154,9 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                     rounded={4}
                     padding={2}
                     justifyContent="flex-start"
-                    transition={["all", "ease", ".5s"]}
+                    transition="all ease .5s"
                     backgroundColor="transparent"
-                    onClick={addChat}
+                    onClick={() => addChat()}
                     _hover={{
                         backgroundColor: "whiteAlpha.100"
                     }}
@@ -148,6 +175,8 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                                 leftIcon={<FiMessageSquare />}
                                 justifyContent="flex-start"
                                 padding={2}
+                                overflow="hidden"
+                                textOverflow="ellipsis"
                                 backgroundColor={
                                     (selectedChat?.id == id) ? ("#ffffff20") : ("transparent")
                                 }
@@ -155,22 +184,15 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                                 _hover={{
                                     backgroundColor: "whiteAlpha.100"
                                 }}
-                                css={css`
-                            .icon{
-                                display:none;
-                            }
-                            &:hover{
-                                .icon{
-                                    display:block;
-                                }
-                            }
-                        `}
                             >
                                 <Text>{role}</Text>
                                 <Spacer />
                                 <FiTrash2
                                     className="icon"
                                     onClick={() => removeChat({ id })}
+                                    style={{
+                                        display: (selectedChat?.id == id) ? ("block") : ("none")
+                                    }}
                                 />
                             </Button>
                         );
@@ -187,12 +209,18 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                         padding={2}
                         onClick={clearAll}
                         backgroundColor="transparent"
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
                     >Clear conversations</Button>
                     <Button
                         padding={2}
                         justifyContent="space-between"
                         backgroundColor="transparent"
                         onClick={handleOpenAccountModal}
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
                     >
                         <Text
                             display="flex"
@@ -211,20 +239,39 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                         padding={2}
                         onClick={toggleColorMode}
                         backgroundColor="transparent"
-                        leftIcon={(colorMode == 'light') ? <FiSun /> : <FiMoon />}
-                    >{(colorMode == 'light') ? ('Light mode') : ('Dark mode')}</Button>
+                        leftIcon={(colorMode == 'dark') ? <FiSun /> : <FiMoon />}
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
+                    >{(colorMode == 'dark') ? ('Light mode') : ('Dark mode')}</Button>
                     <Button
                         leftIcon={<FiExternalLink />}
                         justifyContent="flex-start"
                         padding={2}
                         backgroundColor="transparent"
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
                     >Updates & FAQ</Button>
                     <Button
                         leftIcon={<FiLogOut />}
                         justifyContent="flex-start"
                         padding={2}
                         backgroundColor="transparent"
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
                     >Log Out</Button>
+                    <Button
+                        leftIcon={<FiKey />}
+                        padding={2}
+                        justifyContent="flex-start"
+                        backgroundColor="transparent"
+                        onClick={handleOpenAPIKeyModal}
+                        _hover={{
+                            backgroundColor: "blackAlpha.300"
+                        }}
+                    >Change API Key</Button>
                 </Stack>
             </Stack>
             <AccountModal title="Your account">
@@ -282,6 +329,13 @@ export const Sidebar = ({ isResponsive, ...props }: SideBarProps) => {
                     </Stack>
                 </Stack>
             </AccountModal>
+            <APIKeyModal
+                title="API Key"
+            >
+                <APIKeyModalContent
+                    onConfirm={handleCloseAPIKeyModal}
+                />
+            </APIKeyModal>
         </>
     );
 };
