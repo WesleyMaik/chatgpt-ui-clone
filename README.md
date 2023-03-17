@@ -70,3 +70,6 @@ yarn dev
 ### Feedback
 
 Feedback is appreciated! Reach out on [Twitter](https://twitter.com/euwesleymaik), [Instagram](https://twitter.com/euwesleymaik) or submit a new issue!
+
+---
+"ChatGPT", "OpenAI" and its respective logos are owned by OpenAI Inc. All rights are reserved by the company. My intention with the project is just for study and no monetization is being generated from it.
